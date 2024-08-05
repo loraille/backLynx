@@ -26,7 +26,7 @@ const { checkBody } = require('../modules/checkBody');
 
 router.post('/upload', async (req, res) => {
     //description is mandatory ok?
-    if (!checkBody(req.files, ['imageFromFront']) && !checkBody(req.body, ['name','description','category'])) { 
+    if (!checkBody(req.files, ['imageFromFront']) || !checkBody(req.body, ['name','description','category'])) { 
         res.json({ result: false, error: 'Missing or empty fields' });
         console.log('Check  body, required fields: name,description,category. check also req.filename')
         return; 

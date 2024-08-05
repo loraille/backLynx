@@ -52,11 +52,11 @@ router.post('/signin', (req, res) => {
   }
 
   // 
-  User.findOne({ username: req.body.username }).then(user => {
+  User.findOne({ username: req.body.username }).then(userInfo => {
   // user exist and provided correct password : hash of provided password == hash saved during sign up 
-    if (user && bcrypt.compareSync(req.body.password, user.password)) {
-      console.log({ result: true, user });
-      res.json({ result: true, user });
+    if (userInfo && bcrypt.compareSync(req.body.password, userInfo.password)) {
+      console.log({ result: true, userInfo });
+      res.json({ result: true, userInfo });
     } else {
       res.json({ result: false, error: 'wrong username or password' });
     }
