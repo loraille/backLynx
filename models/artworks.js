@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
  
 const artworkSchema = mongoose.Schema({
-    name: String,
+    title: String,
     description: String,
     category: String,
     url: String,

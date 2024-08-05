@@ -26,9 +26,9 @@ const { checkBody } = require('../modules/checkBody');
 
 router.post('/upload', async (req, res) => {
     //description is mandatory ok?
-    if (!checkBody(req.files, ['imageFromFront']) || !checkBody(req.body, ['name','description','category'])) { 
+    if (!checkBody(req.files, ['imageFromFront']) || !checkBody(req.body, ['title','description','category'])) { 
         res.json({ result: false, error: 'Missing or empty fields' });
-        console.log('Check  body, required fields: name,description,category. check also req.filename')
+        console.log('Check  body, required fields: title,description,category. check also req.filename')
         return; 
     }
     console.log("#######File ready to move under ./tmp and upload to Cloudinary:", req.files.imageFromFront);
@@ -44,7 +44,7 @@ router.post('/upload', async (req, res) => {
             console.log("result from Cloudinary",resultCloudinary);
             // store in DB:
             const newArtwork = new Artwork({ 
-                name: req.body.name,    
+                title: req.body.title,    
                 description: req.body.description,
                 category: req.body.category,
                 comments: [],
