@@ -1,12 +1,12 @@
 const mongoose = require('mongoose')
- 
+
 const artworkSchema = mongoose.Schema({
     title: String,
     description: String,
     category: String,
     url: String,
-    comments: [{userId: mongoose.Schema.Types.ObjectId, comment: String}],
-    tags: [{type: mongoose.Schema.Types.ObjectId, ref: 'tags'}],
+    comments: [{ username: mongoose.Schema.Types.ObjectId, comment: String }],
+    tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'tags' }],
     publishedDate: Date,
 })
 
