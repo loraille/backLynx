@@ -99,7 +99,24 @@ router.get('/:artworkId', (req, res) => {
         })
 });
 
+router.post('/comment/:id', async (req, res) => {
+    const artworkId = req.params.id;
+    const { username, comment } = req.body;
+    try {
+        const artwork = await Artwork.findById(artworkId);
 
+        if (!artwork) {
+            return res.status(404).json({ message: 'Sculpture not found' });
+        }
+        artwork.comments.push({ username, comment });
+
+        await artwork.save();
+        console.log(artwork)
+        res.status(201).json(artwork);
+    } catch (error) {
+        res.status(500).json({ message: 'Error adding comment', error });
+    }
+});
 
 
 module.exports = router;

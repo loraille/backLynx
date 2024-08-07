@@ -5,7 +5,7 @@ const artworkSchema = mongoose.Schema({
     description: String,
     category: String,
     url: String,
-    comments: [{ username: mongoose.Schema.Types.ObjectId, comment: String }],
+    comments: [{ username: String, comment: String }],
     tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'tags' }],
     publishedDate: Date,
 })

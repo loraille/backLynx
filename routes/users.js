@@ -52,15 +52,17 @@ router.post('/signin', (req, res) => {
   }
 
   // 
-  User.findOne({ username: req.body.username }).then(userInfo => {
-  // user exist and provided correct password : hash of provided password == hash saved during sign up 
-    if (userInfo && bcrypt.compareSync(req.body.password, userInfo.password)) {
-      console.log({ result: true, userInfo });
-      res.json({ result: true, userInfo });
-    } else {
-      res.json({ result: false, error: 'wrong username or password' });
-    }
-  });
+  User.findOne({ username: req.body.username })
+    .populate(['favorites', 'following'])
+    .then(userInfo => {
+      // user exist and provided correct password : hash of provided password == hash saved during sign up 
+      if (userInfo && bcrypt.compareSync(req.body.password, userInfo.password)) {
+        console.log({ result: true, userInfo });
+        res.json({ result: true, userInfo });
+      } else {
+        res.json({ result: false, error: 'wrong username or password' });
+      }
+    });
 })
 
 module.exports = router;
