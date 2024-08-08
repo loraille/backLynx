@@ -25,8 +25,13 @@ const { checkBody } = require('../modules/checkBody');
 // checkBody []
 
 router.post('/upload', async (req, res) => {
+ /* KEEP IT to debug express-fileupload req.files 
+    if (req.files) { console.log("req.files "); console.log(req.files);}
+    if (req.body)  { console.log("req.body" ); console.log(req.body);}
+    return;
+*/
     //description is mandatory ok?
-    if (!checkBody(req.files, ['imageFromFront']) || !checkBody(req.body, ['title', 'description', 'category'])) {
+    if (!checkBody(req.files, ['imageFromFront']) || !checkBody(req.body, ['title', 'description', 'category', 'collection', 'uploader'])) {
         res.json({ result: false, error: 'Missing or empty fields' });
         console.log('Check  body, required fields: title,description,category. check also req.filename')
         return;
@@ -42,17 +47,24 @@ router.post('/upload', async (req, res) => {
         const resultCloudinary = await cloudinary.uploader.upload(artworkPath);
         if (resultCloudinary.secure_url) {
             console.log("result from Cloudinary", resultCloudinary);
-            // store in DB:
+            // TODO store in DB:
+            // 1. artworks.tags + eventually new tag(s): split received tags, then loop if  create if needed , then  use id(s) to create newArtwork below
+            // 2. artworks  : almost finished (tags)
+            // 3. users : update collections push new artwork ...
+
+            // artworks:
             const newArtwork = new Artwork({
+                uploader: req.body.uploader,
+                collection: req.body.collection,
                 title: req.body.title,
                 description: req.body.description,
                 category: req.body.category,
                 comments: [],
-                tags: req.body.tags,  // WIP ignoring ref, should be ~ :  new mongoose.Types.ObjectId(req.body.tags) , 
+                tags: [req.body.tags],  // WIP : currently passing hardcoded id (one)
                 publishedDate: Date.now(),
                 url: resultCloudinary.secure_url,
             });
-
+            console.log("#### trying to save newArtwork", newArtwork)
             newArtwork.save().then(newDoc => (Artwork.findById({ _id: newDoc._id }))
                 .then(artwork => res.json({ result: true, artwork })));
         }
@@ -75,7 +87,7 @@ router.get('/', (req, res) => {
         .sort({ publishedDate: -1 })  // most recent on top 
         .populate('tags')
         .then(artworks => {
-            console.log("###", artworks);
+            console.log("################################################", artworks.length);
             res.json({
                 artworks,
             });
@@ -99,6 +111,19 @@ router.get('/:artworkId', (req, res) => {
         })
 });
 
+router.get('/category/:categoryName', (req, res) => {
+    console.log("####ALL Artworks with category == categoryName ################################");
+    Artwork.find({category:req.params.categoryName})
+        .sort({ publishedDate: -1 })  // most recent on top 
+        .populate('tags')
+        .then(artworks => {
+            console.log("################################################", artworks.length);
+            res.json({
+                artworks,
+            });
+        })
+})
+
 router.post('/comment/:id', async (req, res) => {
     const artworkId = req.params.id;
     const { username, comment } = req.body;
@@ -106,7 +131,7 @@ router.post('/comment/:id', async (req, res) => {
         const artwork = await Artwork.findById(artworkId);
 
         if (!artwork) {
-            return res.status(404).json({ message: 'Sculpture not found' });
+            return res.status(404).json({ message: 'Artwork not found' });
         }
         artwork.comments.push({ username, comment });
 
