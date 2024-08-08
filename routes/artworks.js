@@ -9,28 +9,31 @@ const Artwork = require('../models/artworks');
 const Tag = require('../models/tags');
 const { checkBody } = require('../modules/checkBody');
 
-// GET route
-// Notes on comments 
-// * when someone add a comment:  update existing document means router.put with a mongo update :  NewArtwork.UpdateOne()
-// * when displaying Artwork details (see Miro screen 5): 
-//  constraint don't send MongoDB user _ids, impact: 
-// BE: extra step for all comments of this Artwork retrieve all usernames 
-// FE: only once per user session : init only  = comments array username:comment, will be stored on redux store.
-//     comments displayed according depending on username (creator of the artwork on the right with color) 
 
+// Notes on comments 
+// * when someone add a comment:  update existing document means router.put with a mongo update : NewArtwork.UpdateOne()
+// * when displaying Artwork details (see Miro screen 5): 
 
 // POST route 
 // create one artwork. No bulk import, even we accept n files during upload, files will be stored in ./tmp and uuploaded
 // to cloudinary 1 by  1 
-// checkBody []
+// 
 
 router.post('/upload', async (req, res) => {
- /* KEEP IT to debug express-fileupload req.files 
-    if (req.files) { console.log("req.files "); console.log(req.files);}
-    if (req.body)  { console.log("req.body" ); console.log(req.body);}
+   /* FIXED (main issues)
+    DEBUG  req.body : null  then  body : [object Object] 
+    can remove this after completing user part and tags and delete cloudy 
+    if (req.files) { console.log("####### req.files"); console.log(req.files);}
+    if (req.body)  { console.log("####### req.body " ); console.log((req.body.artworkdetails));}
+    console.log("FIN du test #################################################################")
+   */
+
+ /* FIXED ok:
+    debug express-fileupload req.files 
+    res.json({message:"Alors ça te plaît ce que tu vois dans la console?"})
     return;
 */
-    //description is mandatory ok?
+    // we want req.files and req.body
     if (!checkBody(req.files, ['imageFromFront']) || !checkBody(req.body, ['title', 'description', 'category', 'collection', 'uploader'])) {
         res.json({ result: false, error: 'Missing or empty fields' });
         console.log('Check  body, required fields: title,description,category. check also req.filename')
@@ -47,12 +50,14 @@ router.post('/upload', async (req, res) => {
         const resultCloudinary = await cloudinary.uploader.upload(artworkPath);
         if (resultCloudinary.secure_url) {
             console.log("result from Cloudinary", resultCloudinary);
-            // TODO store in DB:
-            // 1. artworks.tags + eventually new tag(s): split received tags, then loop if  create if needed , then  use id(s) to create newArtwork below
-            // 2. artworks  : almost finished (tags)
-            // 3. users : update collections push new artwork ...
+            // TODO  now store in DB:
+            // 
+            // 1. tags + eventually new tag(s): split received tags, then loop create if needed, then use id(s) when creating newArtwork next step
+            // 2. artworks  : almost finished (tags), artworkId will be available for next step 
+            // 3. users : update collections push new artwork 
+            // step 1. tags:
 
-            // artworks:
+            // step 2. artworks:
             const newArtwork = new Artwork({
                 uploader: req.body.uploader,
                 collection: req.body.collection,
@@ -60,11 +65,11 @@ router.post('/upload', async (req, res) => {
                 description: req.body.description,
                 category: req.body.category,
                 comments: [],
-                tags: [req.body.tags],  // WIP : currently passing hardcoded id (one)
+                tags: [req.body.tags],  // WIP: currently passing hardcoded id (one) will be available when step1 ok
                 publishedDate: Date.now(),
                 url: resultCloudinary.secure_url,
             });
-            console.log("#### trying to save newArtwork", newArtwork)
+            // debug: console.log("#### trying to save newArtwork", newArtwork)
             newArtwork.save().then(newDoc => (Artwork.findById({ _id: newDoc._id }))
                 .then(artwork => res.json({ result: true, artwork })));
         }
@@ -87,7 +92,7 @@ router.get('/', (req, res) => {
         .sort({ publishedDate: -1 })  // most recent on top 
         .populate('tags')
         .then(artworks => {
-            console.log("################################################", artworks.length);
+            console.log("##########Total Number of Artworks #############################", artworks.length);
             res.json({
                 artworks,
             });
@@ -112,12 +117,11 @@ router.get('/:artworkId', (req, res) => {
 });
 
 router.get('/category/:categoryName', (req, res) => {
-    console.log("####ALL Artworks with category == categoryName ################################");
     Artwork.find({category:req.params.categoryName})
         .sort({ publishedDate: -1 })  // most recent on top 
         .populate('tags')
         .then(artworks => {
-            console.log("################################################", artworks.length);
+            console.log(`###### Number of Artworks in ${req.params.categoryName} category:`, artworks.length);
             res.json({
                 artworks,
             });
