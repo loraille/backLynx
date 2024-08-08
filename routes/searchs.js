@@ -9,7 +9,7 @@ const User = require('../models/users')
 
 //recherche des oeuvres d'art dont le nom contient//////////////////////////////////////////
 router.get('/artworks', async (req, res) => {
-    const query = req.body.title;
+    const query = req.query.title;
     if (!query) {
         return res.status(400).json({ error: 'Query parameter "title" is required' });
     }
@@ -26,7 +26,7 @@ router.get('/artworks', async (req, res) => {
 });
 //recherche des oeuvres dont le tag commence par////////////////////////////////////////////////
 router.get('/tags', async (req, res) => {
-    const query = req.body.tag;
+    const query = req.query.tag;
     if (!query) {
         return res.status(400).json({ error: 'Query parameter "tag" is required' });
     }
@@ -45,9 +45,6 @@ router.get('/tags', async (req, res) => {
             tags: { $in: tagIds }
         });
 
-        if (results.length === 0) {
-            return res.json({ result: false, item: 'not found' });
-        }
 
         res.json(results);
     } catch (error) {
@@ -57,14 +54,14 @@ router.get('/tags', async (req, res) => {
 
 //recherche des artistes dont le nom contient////////////////////////////////////////////////
 router.get('/artists', async (req, res) => {
-    const query = req.body.username;
+    const query = req.query.username;
     if (!query) {
         return res.status(400).json({ error: 'Query parameter "username" is required' });
     }
     try {
         // Rechercher les user dont le nom contient le texte spécifié
         const results = await User.find({
-            title: { $regex: query, $options: 'i' }
+            username: { $regex: query, $options: 'i' }
         });
 
         res.json(results);
