@@ -9,6 +9,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var artworksRouter = require('./routes/artworks');
 var categoriesRouter = require('./routes/categories');
+var searchRouter = require('./routes/searchs');
 
 var app = express();
 const fileUpload = require('express-fileupload');
@@ -27,4 +28,5 @@ app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/artworks', artworksRouter)
 app.use('/categories', categoriesRouter)
+app.use('/searchs', searchRouter)
 module.exports = app;
