@@ -64,7 +64,21 @@ router.post('/signin', (req, res) => {
       }
     });
 })
-
-
+//////////search by username
+router.get('/:username', (req, res) => {
+  User.findOne({ username: req.params.username })
+    .populate(['favorites', 'following'])
+    .then(userInfo => {
+      if (!userInfo) {
+        return res.status(404).json({ result: false, message: 'User not found' });
+      }
+      console.log(userInfo);
+      res.json({ result: true, userInfo });
+    })
+    .catch(err => {
+      console.error(err);
+      res.status(500).json({ result: false, message: 'Internal Server Error' });
+    });
+});
 
 module.exports = router;
