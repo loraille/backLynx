@@ -80,5 +80,71 @@ router.get('/:username', (req, res) => {
       res.status(500).json({ result: false, message: 'Internal Server Error' });
     });
 });
+////////////add banner || && avatar ||&& bio////////////////////////
+router.post('/settings', async (req, res) => {
+  try {
+    const { username, bio, avatarUrl, bannerUrl } = req.body;
+
+    // Vérifiez si des fichiers ont été téléchargés
+    let avatarUrlUpdated = avatarUrl;
+    let bannerUrlUpdated = bannerUrl;
+
+    if (req.files && req.files.avatar) {
+      const avatarPath = `./tmp/${req.files.avatar.name}`;
+      await req.files.avatar.mv(avatarPath);
+      const resultAvatar = await cloudinary.uploader.upload(avatarPath);
+      avatarUrlUpdated = resultAvatar.secure_url;
+      fs.unlinkSync(avatarPath);
+    }
+
+    if (req.files && req.files.banner) {
+      const bannerPath = `./tmp/${req.files.banner.name}`;
+      await req.files.banner.mv(bannerPath);
+      const resultBanner = await cloudinary.uploader.upload(bannerPath);
+      bannerUrlUpdated = resultBanner.secure_url;
+      fs.unlinkSync(bannerPath);
+    }
+
+    // Mettez à jour les paramètres de l'utilisateur dans la base de données
+    const updatedUser = await User.findOneAndUpdate(
+      { username },
+      { bio, avatarUrl: avatarUrlUpdated, bannerUrl: bannerUrlUpdated },
+      { new: true }
+    );
+
+    res.json({ result: true, user: updatedUser });
+  } catch (error) {
+    console.error(error);
+    res.json({ result: false, error: 'Failed to update settings' });
+  }
+});
+
+// Route pour télécharger les fichiers (avatar et bannière)
+router.post('/upload', async (req, res) => {
+  try {
+    const uploadedFiles = {};
+
+    if (req.files && req.files.avatar) {
+      const avatarPath = `./tmp/${req.files.avatar.name}`;
+      await req.files.avatar.mv(avatarPath);
+      const resultAvatar = await cloudinary.uploader.upload(avatarPath);
+      uploadedFiles.avatarUrl = resultAvatar.secure_url;
+      fs.unlinkSync(avatarPath);
+    }
+
+    if (req.files && req.files.banner) {
+      const bannerPath = `./tmp/${req.files.banner.name}`;
+      await req.files.banner.mv(bannerPath);
+      const resultBanner = await cloudinary.uploader.upload(bannerPath);
+      uploadedFiles.bannerUrl = resultBanner.secure_url;
+      fs.unlinkSync(bannerPath);
+    }
+
+    res.json({ result: true, uploadedFiles });
+  } catch (error) {
+    console.error(error);
+    res.json({ result: false, error: 'Failed to upload files' });
+  }
+});
 
 module.exports = router;

@@ -20,19 +20,19 @@ const { checkBody } = require('../modules/checkBody');
 // 
 
 router.post('/upload', async (req, res) => {
-   /* FIXED (main issues)
-    DEBUG  req.body : null  then  body : [object Object] 
-    can remove this after completing user part and tags and delete cloudy 
-    if (req.files) { console.log("####### req.files"); console.log(req.files);}
-    if (req.body)  { console.log("####### req.body " ); console.log((req.body.artworkdetails));}
-    console.log("FIN du test #################################################################")
-   */
+    /* FIXED (main issues)
+     DEBUG  req.body : null  then  body : [object Object] 
+     can remove this after completing user part and tags and delete cloudy 
+     if (req.files) { console.log("####### req.files"); console.log(req.files);}
+     if (req.body)  { console.log("####### req.body " ); console.log((req.body.artworkdetails));}
+     console.log("FIN du test #################################################################")
+    */
 
- /* FIXED ok:
-    debug express-fileupload req.files 
-    res.json({message:"Alors ça te plaît ce que tu vois dans la console?"})
-    return;
-*/
+    /* FIXED ok:
+       debug express-fileupload req.files 
+       res.json({message:"Alors ça te plaît ce que tu vois dans la console?"})
+       return;
+   */
     // we want req.files and req.body
     if (!checkBody(req.files, ['imageFromFront']) || !checkBody(req.body, ['title', 'description', 'category', 'collection', 'uploader'])) {
         res.json({ result: false, error: 'Missing or empty fields' });
@@ -117,7 +117,7 @@ router.get('/:artworkId', (req, res) => {
 });
 
 router.get('/category/:categoryName', (req, res) => {
-    Artwork.find({category:req.params.categoryName})
+    Artwork.find({ category: req.params.categoryName })
         .sort({ publishedDate: -1 })  // most recent on top 
         .populate('tags')
         .then(artworks => {
@@ -127,7 +127,7 @@ router.get('/category/:categoryName', (req, res) => {
             });
         })
 })
-
+//////////////////ajout de commentaires //////////////////////////////
 router.post('/comment/:id', async (req, res) => {
     const artworkId = req.params.id;
     const { username, comment } = req.body;
