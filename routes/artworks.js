@@ -112,7 +112,7 @@ router.get('/:artworkId', (req, res) => {
         .populate('tags')
         .then(data => {
             console.log(data);
-            res.json({ artworkInfo: data });
+            res.json({ artworkInfo: data, message: 'artwork datas OK!!!' });
         })
 });
 
@@ -122,9 +122,7 @@ router.get('/category/:categoryName', (req, res) => {
         .populate('tags')
         .then(artworks => {
             console.log(`###### Number of Artworks in ${req.params.categoryName} category:`, artworks.length);
-            res.json({
-                artworks,
-            });
+            res.json({ artworks, message: 'artworks in display ok!' });
         })
 })
 //////////////////ajout de commentaires //////////////////////////////
