@@ -148,6 +148,7 @@ router.get('/', (req, res) => {
 router.get('/uploader/:username', (req, res) => {
     console.log("############# req.params.username#");
     Artwork.find({ uploader: req.params.username })
+        .sort({ publishedDate: -1 })  // most recent on top 
         .populate('tags')
         .then(data => {
             console.log(data);
