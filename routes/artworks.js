@@ -20,6 +20,9 @@ const { checkBody } = require('../modules/checkBody');
 // to cloudinary 1 by  1 
 // 
 
+
+
+
 router.post('/upload', async (req, res) => {
     /* FIXED (main issues)
      DEBUG  req.body : null  then  body : [object Object] 
@@ -142,12 +145,34 @@ router.get('/', (req, res) => {
         })
 })
 
+router.get('/:username', (req, res) => {
+    console.log("############# req.params.username#");
+    Artwork.find({ uploader: req.params.username })
+        .populate('tags')
+        .then(data => {
+            console.log(data);
+            res.json({ artworkInfo: data, message: 'artwork datas OK!!!' });
+        })
+});
+
 router.delete('/:artworkId', (req, res) => {
-    Artwork.deleteOne({ _id: req.params.artworkId })
+    Artwork.findOne({ _id: req.params.artworkId })
+    .then(data => {
+        let url=data.url.split("\/")
+        let publicId=url[url.length-1].split('.')[0]  // no extension. we keep it only for raw 
+        console.log("url",data.url,"of artworkId:", data._id,"use publicId with destroy",publicId);
+        cloudinary.uploader.destroy(publicId) //options
+        .then ( (result) => {
+            console.log("cloudinary destroy result", result)
+        })
+    })
+    .then (() => {
+        Artwork.deleteOne({ _id: req.params.artworkId })
         .then(data => {
             console.log(data);
             res.json({ deletedCount: data.deletedCount }); //0 or 1 if matched:  Front side test if(data) to know if deleted  
         })
+    })
 });
 
 router.get('/:artworkId', (req, res) => {
@@ -158,6 +183,8 @@ router.get('/:artworkId', (req, res) => {
             res.json({ artworkInfo: data, message: 'artwork datas OK!!!' });
         })
 });
+
+
 
 router.get('/category/:categoryName', (req, res) => {
     Artwork.find({ category: req.params.categoryName })
