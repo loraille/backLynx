@@ -11,7 +11,7 @@ const { checkBody } = require('../modules/checkBody');
 router.get('/', (req, res)=>{
     Category.find()
     .then(categories => { 
-        console.log("###",categories);
+        console.log("#Number of categories",categories.length);
         res.json({
             categories,
         });

@@ -56,22 +56,49 @@ router.post('/upload', async (req, res) => {
             // 2. artworks  : almost finished (tags), artworkId will be available for next step 
             // 3. users : update collections push new artwork 
             // step 1. tags:
+            // if needed: // Tag.findOne({ name: { $regex: new RegExp(req.params.name, 'i') } })
+            const tagsToCheck = req.body.tags.split(' ');
+            const tagsToAdd = [];
+            console.log("tagsToCheck", tagsToCheck);
 
+            for (tagname of tagsToCheck) {
+                const query = Tag.where({ name: tagname });
+                const tag = await query.findOne();
+                if (tag) {
+                    console.log("tag already exists and can be added to this artwork", tag);
+                    tagsToAdd.push(tag._id);
+                }
+                else {
+                    console.log("create new tag for this artwork", tagname);
+                    const newTag = new Tag({
+                        name: tagname,
+                    });
+                    const querysave = newTag.save();
+                    const newDoc = await querysave;
+                    const queryfind = Tag.findById({ _id: newDoc._id });
+                    const tag = await queryfind;
+                    console.log("new tag created", tag._id)
+                    tagsToAdd.push(tag._id);
+                }
+            }
             // step 2. artworks:
             const newArtwork = new Artwork({
                 uploader: req.body.uploader,
-                collection: req.body.collection,
+                // collection: req.body.collection, -> step3 users
                 title: req.body.title,
                 description: req.body.description,
                 category: req.body.category,
                 comments: [],
-                tags: [req.body.tags],  // WIP: currently passing hardcoded id (one) will be available when step1 ok
+                tags: tagsToAdd,  
                 publishedDate: Date.now(),
                 url: resultCloudinary.secure_url,
             });
             // debug: console.log("#### trying to save newArtwork", newArtwork)
             newArtwork.save().then(newDoc => (Artwork.findById({ _id: newDoc._id }))
-                .then(artwork => res.json({ result: true, artwork })));
+            // TODO : move send response to step3    
+            .then(artwork => res.json({ result: true, artwork })));
+            // TODO step 3. users: update new artworkId in related artwork collectionName 
+            // if collection doesn't exist create it first
         }
         else {
             console.log(error, resultCloudinary);
