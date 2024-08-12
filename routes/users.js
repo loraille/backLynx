@@ -16,6 +16,20 @@ router.get('/', function (req, res) {
     res.status(500).json({ message: err.message });
   });
 });
+///////////////get only artists//////////
+router.get('/artists', function (req, res) {
+  User.find({
+    "collections": {
+      "$ne": []
+    }
+  })
+    .then(data => {
+      res.json({ 'result': true, 'users': data });
+    })
+    .catch(err => {
+      res.status(500).json({ message: err.message });
+    });
+});
 
 ////signup
 router.post('/signup', (req, res) => {
@@ -161,6 +175,50 @@ router.get('/collection/:username/:collection', async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Internal server error' });
+  }
+});
+////////////add bookmark artwork//////////////////////////////////////////////
+router.post('/bookmark/:username/:id', async (req, res) => {
+  try {
+    const { id, username } = req.params;
+
+    //find user
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'User not found' });
+    }
+    // Add id to favorite
+    user.favorites.push(id);
+    // Save modification
+    await user.save();
+
+    res.json({ result: true, message: "Successfully added" });
+  } catch (error) {
+    console.error('Error with user', error);
+    res.status(500).json({ result: false, error: 'Problem with user' });
+  }
+});
+////////////delete bookmark artwork//////////////////////////////////////////////
+router.delete('/bookmark/:username/:id', async (req, res) => {
+  try {
+    const { id, username } = req.params;
+
+    //find user
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'User not found' });
+    }
+    // remove id to favorite
+    user.favorites = user.favorites.filter(favId => favId.toString() !== id);
+    // Save modification
+    await user.save();
+
+    res.json({ result: true, message: "Successfully deleted" });
+  } catch (error) {
+    console.error('Error with user', error);
+    res.status(500).json({ result: false, error: 'Problem with user' });
   }
 });
 module.exports = router;
