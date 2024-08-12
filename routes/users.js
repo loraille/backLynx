@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const { checkBody } = require('../modules/checkBody');
 const User = require('../models/users')
+const Artwork = require('../models/artworks')
 const uid2 = require('uid2');
 const bcrypt = require('bcrypt');
 const cloudinary = require('cloudinary').v2;
@@ -136,5 +137,30 @@ router.put('/:username', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+////////////////get collection by username & collection.name//////////////////////////////////////
+router.get('/collection/:username/:collection', async (req, res) => {
+  const { username, collection } = req.params;
 
+  try {
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const userCollection = user.collections.find(col => col.name === collection);
+
+    if (!userCollection) {
+      return res.status(404).json({ message: 'Collection not found' });
+    }
+
+    const artworkIds = userCollection.artworks;
+    const artworks = await Artwork.find({ _id: { $in: artworkIds } });
+
+    res.json({ message: 'Collection found successfully', artworks });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 module.exports = router;
