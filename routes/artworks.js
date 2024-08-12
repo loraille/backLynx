@@ -86,7 +86,7 @@ router.post('/upload', async (req, res) => {
                 }
             }
             // step 2. artworks:
-         
+
             const newArtwork = new Artwork({
                 uploader: req.body.uploader,
                 // collection: req.body.collection, -> step3 users
@@ -104,20 +104,20 @@ router.post('/upload', async (req, res) => {
             const artwork = await queryfind;
             console.log("new artwork created", artwork._id);
             // step 3. users: 
-            const query = User.where({'collections.name': req.body.collection}); 
+            const query = User.where({ 'collections.name': req.body.collection });
             const userCollection = await query.findOne();
             if (userCollection) {
                 console.log("collection already exists and can be used to add the artwork", userCollection);
                 //const doc = await User.findOneAndUpdate({ collections: { $elemMatch: { name: req.body.collection} } }, { $push: { "collections.$.artworks": {_id:artwork._id}} })
-            } 
-            else {
-                console.log("will create new collection for this artwork ", req.body.collection );
-                const newCollec = await User.updateOne({username:req.body.uploader}, { $push: {collections: {name:req.body.collection, artworks:[]}}})
             }
-            const doc = await User.findOneAndUpdate({ collections: { $elemMatch: { name: req.body.collection} } }, { $push: { "collections.$.artworks": {_id:artwork._id}} })
+            else {
+                console.log("will create new collection for this artwork ", req.body.collection);
+                const newCollec = await User.updateOne({ username: req.body.uploader }, { $push: { collections: { name: req.body.collection, artworks: [] } } })
+            }
+            const doc = await User.findOneAndUpdate({ collections: { $elemMatch: { name: req.body.collection } } }, { $push: { "collections.$.artworks": { _id: artwork._id } } })
 
-              //  console.log("Artwork",artwork,"uploaded into ", req.body.uploader, " 's collection",  user);
-              //  res.json({ result: true, artwork });  
+            //  console.log("Artwork",artwork,"uploaded into ", req.body.uploader, " 's collection",  user);
+            //  res.json({ result: true, artwork });  
         }
         else {
             console.log(error, resultCloudinary);
@@ -145,7 +145,7 @@ router.get('/', (req, res) => {
         })
 })
 
-router.get('/:username', (req, res) => {
+router.get('/uploader/:username', (req, res) => {
     console.log("############# req.params.username#");
     Artwork.find({ uploader: req.params.username })
         .populate('tags')
@@ -157,22 +157,22 @@ router.get('/:username', (req, res) => {
 
 router.delete('/:artworkId', (req, res) => {
     Artwork.findOne({ _id: req.params.artworkId })
-    .then(data => {
-        let url=data.url.split("\/")
-        let publicId=url[url.length-1].split('.')[0]  // no extension. we keep it only for raw 
-        console.log("url",data.url,"of artworkId:", data._id,"use publicId with destroy",publicId);
-        cloudinary.uploader.destroy(publicId) //options
-        .then ( (result) => {
-            console.log("cloudinary destroy result", result)
-        })
-    })
-    .then (() => {
-        Artwork.deleteOne({ _id: req.params.artworkId })
         .then(data => {
-            console.log(data);
-            res.json({ deletedCount: data.deletedCount }); //0 or 1 if matched:  Front side test if(data) to know if deleted  
+            let url = data.url.split("\/")
+            let publicId = url[url.length - 1].split('.')[0]  // no extension. we keep it only for raw 
+            console.log("url", data.url, "of artworkId:", data._id, "use publicId with destroy", publicId);
+            cloudinary.uploader.destroy(publicId) //options
+                .then((result) => {
+                    console.log("cloudinary destroy result", result)
+                })
         })
-    })
+        .then(() => {
+            Artwork.deleteOne({ _id: req.params.artworkId })
+                .then(data => {
+                    console.log(data);
+                    res.json({ deletedCount: data.deletedCount }); //0 or 1 if matched:  Front side test if(data) to know if deleted  
+                })
+        })
 });
 
 router.get('/:artworkId', (req, res) => {
