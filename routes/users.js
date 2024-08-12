@@ -221,4 +221,50 @@ router.delete('/bookmark/:username/:id', async (req, res) => {
     res.status(500).json({ result: false, error: 'Problem with user' });
   }
 });
+////////////add following///////////////////////////////////////////////////////
+router.post('/following/:username/:uploader', async (req, res) => {
+  try {
+    const { uploader, username } = req.params;
+
+    //find user & follow
+    const user = await User.findOne({ username });
+    const follow = await User.findOne({ username: uploader })
+
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'User not found' });
+    }
+    // Add follow to following
+    user.following.push(follow);
+    // Save modification
+    await user.save();
+
+    res.json({ result: true, message: "Successfully added" });
+  } catch (error) {
+    console.error('Error with user', error);
+    res.status(500).json({ result: false, error: 'Problem with user' });
+  }
+});
+////////////delete following//////////////////////////////////////////////
+router.delete('/following/:username/:uploader', async (req, res) => {
+  try {
+    const { uploader, username } = req.params;
+
+    //find user & follow
+    const user = await User.findOne({ username });
+    const follow = await User.findOne({ username: uploader })
+    console.log('---------------------------follow', follow)
+    if (!user) {
+      return res.status(404).json({ result: false, error: 'User not found' });
+    }
+    // remove id to favorite
+    user.following = user.following.filter(favId => favId.toString() !== follow._id.toString());
+    // Save modification
+    await user.save();
+
+    res.json({ result: true, message: "Successfully deleted" });
+  } catch (error) {
+    console.error('Error with user', error);
+    res.status(500).json({ result: false, error: 'Problem with user' });
+  }
+});
 module.exports = router;
