@@ -6,6 +6,7 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
 const Artwork = require('../models/artworks');
+const User = require('../models/users');
 const Tag = require('../models/tags');
 const { checkBody } = require('../modules/checkBody');
 
@@ -82,6 +83,7 @@ router.post('/upload', async (req, res) => {
                 }
             }
             // step 2. artworks:
+         
             const newArtwork = new Artwork({
                 uploader: req.body.uploader,
                 // collection: req.body.collection, -> step3 users
@@ -89,16 +91,30 @@ router.post('/upload', async (req, res) => {
                 description: req.body.description,
                 category: req.body.category,
                 comments: [],
-                tags: tagsToAdd,  
+                tags: tagsToAdd,
                 publishedDate: Date.now(),
                 url: resultCloudinary.secure_url,
             });
-            // debug: console.log("#### trying to save newArtwork", newArtwork)
-            newArtwork.save().then(newDoc => (Artwork.findById({ _id: newDoc._id }))
-            // TODO : move send response to step3    
-            .then(artwork => res.json({ result: true, artwork })));
-            // TODO step 3. users: update new artworkId in related artwork collectionName 
-            // if collection doesn't exist create it first
+            const querysave = newArtwork.save();
+            const newDoc = await querysave;
+            const queryfind = Artwork.findById({ _id: newDoc._id });
+            const artwork = await queryfind;
+            console.log("new artwork created", artwork._id);
+            // step 3. users: 
+            const query = User.where({'collections.name': req.body.collection}); 
+            const userCollection = await query.findOne();
+            if (userCollection) {
+                console.log("collection already exists and can be used to add the artwork", userCollection);
+                //const doc = await User.findOneAndUpdate({ collections: { $elemMatch: { name: req.body.collection} } }, { $push: { "collections.$.artworks": {_id:artwork._id}} })
+            } 
+            else {
+                console.log("will create new collection for this artwork ", req.body.collection );
+                const newCollec = await User.updateOne({username:req.body.uploader}, { $push: {collections: {name:req.body.collection, artworks:[]}}})
+            }
+            const doc = await User.findOneAndUpdate({ collections: { $elemMatch: { name: req.body.collection} } }, { $push: { "collections.$.artworks": {_id:artwork._id}} })
+
+              //  console.log("Artwork",artwork,"uploaded into ", req.body.uploader, " 's collection",  user);
+              //  res.json({ result: true, artwork });  
         }
         else {
             console.log(error, resultCloudinary);
