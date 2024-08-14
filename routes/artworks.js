@@ -116,8 +116,8 @@ router.post('/upload', async (req, res) => {
             }
             const doc = await User.findOneAndUpdate({ collections: { $elemMatch: { name: req.body.collection } } }, { $push: { "collections.$.artworks": { _id: artwork._id } } })
 
-            //  console.log("Artwork",artwork,"uploaded into ", req.body.uploader, " 's collection",  user);
-            //  res.json({ result: true, artwork });  
+             console.log("Artwork",artwork,"uploaded into ", req.body.uploader, " 's collection");
+             res.json({ result: true , data: artwork });  
         }
         else {
             console.log(error, resultCloudinary);
