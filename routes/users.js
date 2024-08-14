@@ -32,32 +32,41 @@ router.get('/artists', function (req, res) {
 });
 
 ////signup
-router.post('/signup', (req, res) => {
+router.post('/signup', async (req, res) => {
   if (!checkBody(req.body, ['username', 'email', 'password'])) {
     res.json({ result: false, error: 'Missing or empty fields' });
     return;
   }
 
-  // Check if the user has not already been registered
-  User.findOne({ email: req.body.email }).then(data => {
-    if (data === null) {
-      const hash = bcrypt.hashSync(req.body.password, 10);
-
-      const newUser = new User({
-        username: req.body.username,
-        password: hash,
-        token: uid2(32),
-        email: req.body.email,
-      });
-
-      newUser.save().then(newDoc => {
-        res.json({ result: true, userInfo: newDoc });
-      });
-    } else {
-      // User already exists in database
-      res.json({ result: false, error: 'User already exists' });
+  try {
+    // Check if the email is already registered
+    const existingEmail = await User.findOne({ email: req.body.email });
+    if (existingEmail) {
+      return res.json({ result: false, error: 'Email already exists' });
     }
-  });
+
+    // Check if the username is already registered
+    const existingUsername = await User.findOne({ username: { $regex: new RegExp(`^${req.body.username}$`, 'i') } });
+    if (existingUsername) {
+      return res.json({ result: false, error: 'Username already exists' });
+    }
+
+    const hash = bcrypt.hashSync(req.body.password, 10);
+
+    const newUser = new User({
+      username: req.body.username,
+      password: hash,
+      token: uid2(32),
+      email: req.body.email,
+    });
+
+    await newUser.save();
+
+    res.json({ result: true, userInfo: newUser });
+  } catch (error) {
+    console.error('Error during signup:', error);
+    res.status(500).json({ result: false, error: 'Internal server error' });
+  }
 });
 
 
@@ -69,7 +78,7 @@ router.post('/signin', (req, res) => {
   }
 
   // 
-  User.findOne({ username: req.body.username })
+  User.findOne({ username: { $regex: new RegExp(`^${req.body.username}$`, 'i') } })
     .populate(['favorites', 'following'])
     .then(userInfo => {
       // user exist and provided correct password : hash of provided password == hash saved during sign up 
