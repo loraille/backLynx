@@ -106,6 +106,7 @@ router.get('/:username', (req, res) => {
       res.status(500).json({ result: false, message: 'Internal Server Error' });
     });
 });
+
 ////////////upload banner || avatar => URL/////////////////////
 router.post('/upload', async (req, res) => {
   try {
