@@ -31,15 +31,17 @@ router.get("/", (req, res) => {
       res.status(500).json({ message: err.message });
     });
 });
-///////////////get only artists//////////
+
+///////////////get only artists populate artworks limit 3 artworks per artist//////////
 router.get("/artists", function (req, res) {
   User.find({
     collections: {
       $ne: [],
     },
   })
+    .populate({ path: 'collections.artworks', options: { perDocumentLimit: 3 } })
     .then((data) => {
-      res.json({ result: true, users: data });
+      res.json({ result: true, artists: data });
     })
     .catch((err) => {
       res.status(500).json({ message: err.message });
