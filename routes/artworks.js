@@ -186,13 +186,12 @@ router.get("/", async (req, res) => {
 });
 ////////////////////////get artwork with user///////////////////////////
 router.get("/uploader/:username", (req, res) => {
-  console.log("############# req.params.username#");
   Artwork.find({ uploader: req.params.username })
     .sort({ publishedDate: -1 }) // most recent on top
     .limit(req.query.limit)
     .populate("tags")
     .then((data) => {
-      console.log(data);
+      console.log("##",req.params.username,"number of uploaded artworks",data.length);
       res.json({ artworkInfo: data, message: "artwork datas OK!!!" });
     });
 });
@@ -228,7 +227,7 @@ router.get("/:artworkId", (req, res) => {
   Artwork.findOne({ _id: req.params.artworkId })
     .populate("tags")
     .then((data) => {
-      console.log(data);
+      console.log("found:",data.title);
       res.json({ artworkInfo: data, message: "artwork datas OK!!!" });
     });
 });

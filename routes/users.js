@@ -33,15 +33,20 @@ router.get("/", (req, res) => {
 });
 
 ///////////////get only artists populate artworks limit 3 artworks per artist//////////
+// select only required fields for users (username avatarUrl bio) and artworks (url)
+
 router.get("/artists", function (req, res) {
   User.find({
     collections: {
       $ne: [],
     },
   })
-    .populate({ path: 'collections.artworks', options: { perDocumentLimit: 3 } })
+    .select('username avatarUrl bio') 
+    .populate({ path: 'collections.artworks', select: 'url',  options: { perDocumentLimit: 3 } })
     .then((data) => {
-      res.json({ result: true, artists: data });
+      console.log("# of Artists ",data.length)
+      res.json({ result: true, artists: data 
+      });
     })
     .catch((err) => {
       res.status(500).json({ message: err.message });
@@ -80,8 +85,13 @@ router.post("/signup", async (req, res) => {
     });
 
     await newUser.save();
-
-    res.json({ result: true, userInfo: newUser });
+    console.log("##Welcome ",req.body.username);
+    userInfo= {
+      username: newUser.username,
+      token: newUser.token,
+      email: newUser.email
+    }
+    res.json({ result: true, userInfo });
   } catch (error) {
     console.error("Error during signup:", error);
     res.status(500).json({ result: false, error: "Internal server error" });
@@ -106,7 +116,12 @@ router.post("/signin", (req, res) => {
         userInfo &&
         bcrypt.compareSync(req.body.password, userInfo.password)
       ) {
-        console.log({ result: true, userInfo });
+        console.log("##",req.body.username," just signed In");
+        userInfo= {
+          username: userInfo.username,
+          token: userInfo.token,
+          email: userInfo.email
+        }
         res.json({ result: true, userInfo });
       } else {
         res.json({ result: false, error: "wrong username or password" });
@@ -116,6 +131,7 @@ router.post("/signin", (req, res) => {
 //////////search by username
 router.get("/:username", (req, res) => {
   User.findOne({ username: req.params.username })
+    .select("username email avatarUrl bannerUrl bio favorites following collections")
     .populate(["favorites", "following", "collections.artworks"])
     .then((userInfo) => {
       if (!userInfo) {
@@ -123,7 +139,6 @@ router.get("/:username", (req, res) => {
           .status(404)
           .json({ result: false, message: "User not found" });
       }
-      console.log(userInfo);
       res.json({
         result: true,
         userInfo,
