@@ -41,12 +41,15 @@ router.get("/artists", function (req, res) {
       $ne: [],
     },
   })
-    .select('username avatarUrl bio') 
-    .populate({ path: 'collections.artworks', select: 'url',  options: { perDocumentLimit: 3 } })
+    .select("username avatarUrl bio")
+    .populate({
+      path: "collections.artworks",
+      select: "url",
+      options: { perDocumentLimit: 3 },
+    })
     .then((data) => {
-      console.log("# of Artists ",data.length)
-      res.json({ result: true, artists: data 
-      });
+      console.log("# of Artists ", data.length);
+      res.json({ result: true, artists: data });
     })
     .catch((err) => {
       res.status(500).json({ message: err.message });
@@ -85,12 +88,12 @@ router.post("/signup", async (req, res) => {
     });
 
     await newUser.save();
-    console.log("##Welcome ",req.body.username);
-    userInfo= {
+    console.log("##Welcome ", req.body.username);
+    userInfo = {
       username: newUser.username,
       token: newUser.token,
-      email: newUser.email
-    }
+      email: newUser.email,
+    };
     res.json({ result: true, userInfo });
   } catch (error) {
     console.error("Error during signup:", error);
@@ -116,12 +119,12 @@ router.post("/signin", (req, res) => {
         userInfo &&
         bcrypt.compareSync(req.body.password, userInfo.password)
       ) {
-        console.log("##",req.body.username," just signed In");
-        userInfo= {
+        console.log("##", req.body.username, " just signed In");
+        userInfo = {
           username: userInfo.username,
           token: userInfo.token,
-          email: userInfo.email
-        }
+          email: userInfo.email,
+        };
         res.json({ result: true, userInfo });
       } else {
         res.json({ result: false, error: "wrong username or password" });
@@ -131,7 +134,9 @@ router.post("/signin", (req, res) => {
 //////////search by username
 router.get("/:username", (req, res) => {
   User.findOne({ username: req.params.username })
-    .select("username email avatarUrl bannerUrl bio favorites following collections")
+    .select(
+      "username email avatarUrl bannerUrl bio favorites following collections"
+    )
     .populate(["favorites", "following", "collections.artworks"])
     .then((userInfo) => {
       if (!userInfo) {
@@ -160,7 +165,7 @@ router.post("/upload", async (req, res) => {
     }
 
     const image = req.files.image;
-    const imagePath = `./tmp/${image.name}`;
+    const imagePath = `/tmp/${image.name}`;
     console.log("imagePath", imagePath);
     // Move the file to the temporary directory
     await image.mv(imagePath);
