@@ -165,7 +165,7 @@ router.post("/upload", async (req, res) => {
     }
 
     const image = req.files.image;
-    const imagePath = `./modules/${image.name}`;
+    const imagePath = `/tmp/${image.name}`;
     console.log("imagePath", imagePath);
     // Move the file to the temporary directory
     await image.mv(imagePath);
