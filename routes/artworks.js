@@ -15,7 +15,7 @@ const { checkBody } = require("../modules/checkBody");
 // * when displaying Artwork details (see Miro screen 5):
 
 // POST route
-// create one artwork. No bulk import, even we accept n files during upload, files will be stored in /tmp and uuploaded
+// create one artwork. No bulk import, even we accept n files during upload, files will be stored in ./tmp and uuploaded
 // to cloudinary 1 by  1
 //
 
@@ -51,11 +51,11 @@ router.post("/upload", async (req, res) => {
     return;
   }
   console.log(
-    "#######File ready to move under /tmp and upload to Cloudinary:",
+    "#######File ready to move under ./tmp and upload to Cloudinary:",
     req.files.imageFromFront
   );
   // TODO: check extension  use modules/genfilename(original filename)  return filename to use.
-  const artworkPath = `/tmp/${req.files.imageFromFront.name}`;
+  const artworkPath = `./modules/${req.files.imageFromFront.name}`;
   const resultMove = await req.files.imageFromFront.mv(artworkPath);
 
   if (!resultMove) {
