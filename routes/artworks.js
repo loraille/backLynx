@@ -200,33 +200,60 @@ router.get("/uploader/:username", (req, res) => {
       res.json({ artworkInfo: data, message: "artwork datas OK!!!" });
     });
 });
-///////////////////////////delete artwork/////////////////////////////////
-router.delete("/:artworkId", (req, res) => {
-  Artwork.findOne({ _id: req.params.artworkId })
-    .then((data) => {
-      let url = data.url.split("/");
-      let publicId = url[url.length - 1].split(".")[0]; // no extension. we keep it only for raw
-      console.log(
-        "url",
-        data.url,
-        "of artworkId:",
-        data._id,
-        "use publicId with destroy",
-        publicId
-      );
-      cloudinary.uploader
-        .destroy(publicId) //options
-        .then((result) => {
-          console.log("cloudinary destroy result", result);
-        });
-    })
-    .then(() => {
-      Artwork.deleteOne({ _id: req.params.artworkId }).then((data) => {
-        console.log(data);
-        res.json({ deletedCount: data.deletedCount }); //0 or 1 if matched:  Front side test if(data) to know if deleted
-      });
-    });
+
+//////////////////////////delete artwork & collection ////////////////////////////////////////////
+router.delete("/:artworkId", async (req, res) => {
+  try {
+    const artworkId = req.params.artworkId;
+
+    // find media url
+    const artwork = await Artwork.findOne({ _id: artworkId });
+    if (!artwork) {
+      return res.status(404).json({ message: "Artwork not found" });
+    }
+
+    // Extract publicId in URL to suppress in Cloudinary
+    let url = artwork.url.split("/");
+    let publicId = url[url.length - 1].split(".")[0]; // no extension. we keep it only for raw
+
+    // Suppress from Cloudinary
+    await cloudinary.uploader.destroy(publicId);
+
+    // Suppress artwork on artworks
+    await Artwork.deleteOne({ _id: artworkId });
+
+    // find username
+    const user = await User.findOne({ username: artwork.uploader });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    //find collection includes artworkId
+    const collection = user.collections.find((col) =>
+      col.artworks.includes(artworkId)
+    );
+    if (!collection) {
+      return res.status(404).json({ message: "Collection not found" });
+    }
+
+    // Suppress artwork from user collection
+    collection.artworks.pull(artworkId);
+
+    // Suppress empty collection
+    if (collection.artworks.length === 0) {
+      user.collections.pull(collection._id);
+    }
+
+    // Save user modifications
+    await user.save();
+
+    res.json({ deletedCount: 1 }); // 1 artwork removed
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting artwork", error });
+  }
 });
+
 ////////////////////get artwork with id///////////////////////////////////
 router.get("/:artworkId", (req, res) => {
   Artwork.findOne({ _id: req.params.artworkId })

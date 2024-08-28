@@ -11,7 +11,7 @@ const fs = require("fs");
 /* GET users listing. */
 router.get("/", (req, res) => {
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10; // Utilisez la limite envoyée par le frontend
+  const limit = parseInt(req.query.limit) || 10;
 
   Artwork.find()
     .sort({ publishedDate: -1 }) // most recent on top
